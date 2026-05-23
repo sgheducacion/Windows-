@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Windows</title>
+
+<style>
+:root{
+    --bg:#FFF8E1;
+    --card:#FFF3C4;
+    --btn:#E6C75A;
+    --btn-hover:#D9B84F;
+    --text:#333;
+    --success:#4CAF50;
+    --error:#F44336;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI, Arial, sans-serif;
+}
+
+body{
+    background:var(--bg);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:var(--text);
+}
+
+.screen{
+    width:90%;
+    max-width:900px;
+    background:var(--card);
+    padding:40px;
+    border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.15);
+    text-align:center;
+}
+
+.hidden{
+    display:none;
+}
+
+h1,h2,h3{
+    margin-bottom:20px;
+}
+
+p{
+    margin:10px 0;
+}
+
+.logo{
+    width:180px;
+    margin-bottom:20px;
+}
+
+button{
+    background:var(--btn);
+    border:none;
+    padding:12px 25px;
+    margin:10px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:1rem;
+    transition:.3s;
+}
+
+button:hover{
+    background:var(--btn-hover);
+}
+
+input{
+    width:80%;
+    max-width:400px;
+    padding:12px;
+    margin:10px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    text-align:center;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-around;
+    flex-wrap:wrap;
+    margin-bottom:25px;
+    font-weight:bold;
+    gap:10px;
+}
+
+.question{
+    font-size:1.3rem;
+    margin-bottom:25px;
+}
+
+.answers button{
+    display:block;
+    width:100%;
+    max-width:500px;
+    margin:10px auto;
+}
+
+.feedback{
+    font-size:1.2rem;
+    margin-top:20px;
+    font-weight:bold;
+}
+
+.correct{
+    color:var(--success);
+}
+
+.incorrect{
+    color:var(--error);
+}
+
+ul{
+    text-align:left;
+    max-width:600px;
+    margin:20px auto;
+}
+
+li{
+    margin:8px 0;
+}
+
+.result{
+    font-size:1.2rem;
+    margin:15px 0;
+}
+</style>
+</head>
+
+<body>
+
+<!-- BIENVENIDA -->
+<div class="screen" id="welcome">
+    <img src="logo.png" alt="Logo" class="logo">
+    <h1>QUIZ WINDOWS</h1>
+    <p>Pon a prueba tus conocimientos sobre Microsoft Windows</p>
+    <button onclick="showScreen('instructions')">Comenzar</button>
+</div>
+
+<!-- INSTRUCCIONES -->
+<div class="screen hidden" id="instructions">
+    <h2>Instrucciones</h2>
+
+    <ul>
+        <li>El juego consta de 5 niveles.</li>
+        <li>Cada nivel aumenta la dificultad.</li>
+        <li>Cada pregunta tiene 3 respuestas posibles.</li>
+        <li>Solo una respuesta es correcta.</li>
+        <li>Dispones de 20 segundos para responder.</li>
+        <li>Las respuestas correctas suman puntos.</li>
+        <li>Las incorrectas cuentan como fallo.</li>
+        <li>Intenta llegar hasta el nivel 5.</li>
+    </ul>
+
+    <button onclick="showScreen('playerData')">Continuar</button>
+</div>
+
+<!-- DATOS -->
+<div class="screen hidden" id="playerData">
+    <h2>Introduce tus datos</h2>
+
+    <input type="text" id="nombre" placeholder="Nombre"><br>
+    <input type="text" id="apellidos" placeholder="Apellidos"><br>
+    <input type="text" id="curso" placeholder="Curso"><br>
+
+    <button onclick="startGame()">Empezar partida</button>
+</div>
+
+<!-- JUEGO -->
+<div class="screen hidden" id="game">
+
+    <div class="topbar">
+        <div>Aciertos: <span id="hits">0</span></div>
+        <div>Fallos: <span id="fails">0</span></div>
+        <div>Nivel: <span id="level">1</span></div>
+        <div>Tiempo: <span id="timer">20</span></div>
+    </div>
+
+    <div class="question" id="question"></div>
+
+    <div class="answers" id="answers"></div>
+
+    <div id="feedback" class="feedback"></div>
+
+</div>
+
+<!-- FINAL -->
+<div class="screen hidden" id="final">
+
+    <h1>PARTIDA FINALIZADA</h1>
+
+    <div class="result" id="finalMessage"></div>
+
+    <div class="result" id="playerInfo"></div>
+
+    <div class="result" id="scoreInfo"></div>
+
+    <div class="result" id="evaluation"></div>
+
+    <button onclick="location.reload()">Jugar de nuevo</button>
+
+</div>
+
+<script>
+
+const questions = [
+
+{level:1,q:"¿Qué es Windows?",a:["Un sistema operativo","Un navegador web","Un antivirus"],c:0},
+{level:1,q:"¿Qué empresa desarrolla Windows?",a:["Apple","Microsoft","Google"],c:1},
+{level:1,q:"¿Qué icono suele utilizarse para eliminar archivos?",a:["Papelera de reciclaje","Explorador","Panel de control"],c:0},
+{level:1,q:"¿Cuál es el escritorio de Windows?",a:["La pantalla principal","El disco duro","La impresora"],c:0},
+{level:1,q:"¿Qué dispositivo se utiliza normalmente para mover el puntero?",a:["Ratón","Escáner","Altavoz"],c:0},
+
+{level:2,q:"¿Qué combinación abre el Explorador de archivos?",a:["Windows + E","Windows + P","Windows + L"],c:0},
+{level:2,q:"¿Dónde se almacenan normalmente los documentos del usuario?",a:["Documentos","BIOS","Papelera"],c:0},
+{level:2,q:"¿Qué herramienta permite instalar programas?",a:["Instalador","Paint","Bloc de notas"],c:0},
+{level:2,q:"¿Qué navegador viene habitualmente con Windows?",a:["Edge","Firefox","Opera"],c:0},
+{level:2,q:"¿Qué tecla abre el menú Inicio?",a:["Tecla Windows","Shift","Esc"],c:0},
+
+{level:3,q:"¿Qué es una carpeta?",a:["Un contenedor de archivos","Un programa","Un controlador"],c:0},
+{level:3,q:"¿Qué extensión suele tener un ejecutable?",a:[".exe",".txt",".jpg"],c:0},
+{level:3,q:"¿Qué utilidad muestra los procesos en ejecución?",a:["Administrador de tareas","Paint","WordPad"],c:0},
+{level:3,q:"¿Qué significa actualizar Windows?",a:["Instalar mejoras y correcciones","Apagar el equipo","Vaciar la papelera"],c:0},
+{level:3,q:"¿Qué componente almacena temporalmente datos en ejecución?",a:["RAM","Monitor","Teclado"],c:0},
+
+{level:4,q:"¿Qué herramienta administra discos y particiones?",a:["Administración de discos","Paint","Calculadora"],c:0},
+{level:4,q:"¿Qué es NTFS?",a:["Sistema de archivos","Navegador","Antivirus"],c:0},
+{level:4,q:"¿Para qué sirve el Panel de control?",a:["Configurar el sistema","Crear vídeos","Navegar por Internet"],c:0},
+{level:4,q:"¿Qué comando abre la ventana Ejecutar?",a:["Windows + R","Windows + D","Windows + F"],c:0},
+{level:4,q:"¿Qué es un controlador (driver)?",a:["Software que permite usar hardware","Una carpeta","Un usuario"],c:0},
+
+{level:5,q:"¿Qué utilidad permite gestionar usuarios locales?",a:["lusrmgr.msc","calc.exe","mspaint.exe"],c:0},
+{level:5,q:"¿Qué partición suele contener el sistema operativo?",a:["Partición del sistema","Papelera","USB"],c:0},
+{level:5,q:"¿Qué herramienta permite revisar eventos del sistema?",a:["Visor de eventos","Paint","Bloc de notas"],c:0},
+{level:5,q:"¿Qué comando abre el símbolo del sistema?",a:["cmd","txt","exe"],c:0},
+{level:5,q:"¿Qué significa GUI?",a:["Interfaz gráfica de usuario","Gestión unificada interna","Grupo universal informático"],c:0}
+
+];
+
+let current=0;
+let hits=0;
+let fails=0;
+let score=0;
+let timer=20;
+let interval;
+
+let player={};
+
+function showScreen(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+}
+
+function startGame(){
+
+    const nombre=document.getElementById("nombre").value.trim();
+    const apellidos=document.getElementById("apellidos").value.trim();
+    const curso=document.getElementById("curso").value.trim();
+
+    if(!nombre || !apellidos || !curso){
+        alert("Completa todos los campos.");
+        return;
+    }
+
+    player={nombre,apellidos,curso};
+
+    showScreen("game");
+
+    loadQuestion();
+}
+
+function loadQuestion(){
+
+    if(current>=questions.length){
+        finishGame();
+        return;
+    }
+
+    const q=questions[current];
+
+    document.getElementById("question").textContent=q.q;
+    document.getElementById("level").textContent=q.level;
+
+    const answers=document.getElementById("answers");
+    answers.innerHTML="";
+
+    q.a.forEach((answer,index)=>{
+
+        const btn=document.createElement("button");
+        btn.textContent=answer;
+        btn.onclick=()=>answerQuestion(index);
+
+        answers.appendChild(btn);
+
+    });
+
+    document.getElementById("feedback").textContent="";
+
+    startTimer();
+}
+
+function startTimer(){
+
+    clearInterval(interval);
+
+    timer=20;
+    document.getElementById("timer").textContent=timer;
+
+    interval=setInterval(()=>{
+
+        timer--;
+        document.getElementById("timer").textContent=timer;
+
+        if(timer<=0){
+
+            clearInterval(interval);
+
+            fails++;
+            updateScoreboard();
+
+            setTimeout(()=>{
+                current++;
+                loadQuestion();
+            },500);
+
+        }
+
+    },1000);
+
+}
+
+function answerQuestion(index){
+
+    clearInterval(interval);
+
+    const q=questions[current];
+    const feedback=document.getElementById("feedback");
+
+    if(index===q.c){
+
+        hits++;
+        score+=10;
+
+        feedback.textContent="¡Correcto!";
+        feedback.className="feedback correct";
+
+    }else{
+
+        fails++;
+
+        feedback.textContent="Incorrecto";
+        feedback.className="feedback incorrect";
+    }
+
+    updateScoreboard();
+
+    setTimeout(()=>{
+        current++;
+        loadQuestion();
+    },1000);
+}
+
+function updateScoreboard(){
+
+    document.getElementById("hits").textContent=hits;
+    document.getElementById("fails").textContent=fails;
+}
+
+function finishGame(){
+
+    showScreen("final");
+
+    document.getElementById("finalMessage").innerHTML=
+    `<strong>Enhorabuena, ${player.nombre}</strong>`;
+
+    document.getElementById("playerInfo").innerHTML=
+    `
+    Nombre: ${player.nombre}<br>
+    Apellidos: ${player.apellidos}<br>
+    Curso: ${player.curso}
+    `;
+
+    document.getElementById("scoreInfo").innerHTML=
+    `
+    Aciertos: ${hits}<br>
+    Fallos: ${fails}<br>
+    Puntuación final: ${score} puntos
+    `;
+
+    let text="";
+
+    if(score<=100){
+        text="Debes seguir practicando";
+    }else if(score<=170){
+        text="Buen trabajo";
+    }else if(score<=220){
+        text="Muy buen nivel";
+    }else{
+        text="¡Experto en Windows!";
+    }
+
+    document.getElementById("evaluation").innerHTML=
+    `<strong>${text}</strong>`;
+}
+
+</script>
+
+</body>
+</html>
